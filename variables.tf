@@ -63,11 +63,11 @@ variable "instance_tags" {
 	default     = ["http-server"]
 }
 
-variable "instance_sa_name" {
-	type        = string
-	description = "Identifiant du service account pour la VM"
-	default     = "tf-lab-vm"
-}
+#variable "instance_sa_name" {
+#	type        = string
+#	description = "Identifiant du service account pour la VM"
+#	default     = "tf-lab-vm"
+#}
 
 variable "bucket_name_prefix" {
 	type        = string

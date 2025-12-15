@@ -11,10 +11,10 @@ resource "google_compute_subnetwork" "subnet" {
 	network       = google_compute_network.vpc.id
 }
 
-resource "google_service_account" "vm" {
-	account_id   = var.instance_sa_name
-	display_name = "Terraform demo VM"
-}
+#resource "google_service_account" "vm" {
+#	account_id   = var.instance_sa_name
+#	display_name = "Terraform demo VM"
+#}
 
 resource "google_compute_address" "vm" {
 	name   = "${var.instance_name}-ip"
@@ -42,10 +42,10 @@ resource "google_compute_instance" "vm" {
 		}
 	}
 
-	service_account {
-		email  = google_service_account.vm.email
-		scopes = ["https://www.googleapis.com/auth/cloud-platform"]
-	}
+	#service_account {
+	#	email  = google_service_account.vm.email
+	#	scopes = ["https://www.googleapis.com/auth/cloud-platform"]
+	#}
 
 	shielded_instance_config {
 		enable_secure_boot          = true
