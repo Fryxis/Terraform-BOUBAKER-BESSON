@@ -19,22 +19,10 @@ env:
   TF_CLI_ARGS_init: "-upgrade"
 
 jobs:
-  plan_apply:
-    if: github.event_name != 'workflow_dispatch' || inputs.operation != 'destroy'
+  plan:
+    if: github.event_name != 'workflow_dispatch' || inputs.operation == 'plan'
     runs-on: ubuntu-latest
     steps:
-      - name: Determiner l'operation
-        id: op
-        run: |
-          op="${{ inputs.operation }}"
-          if [ -n "$op" ] && [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
-            echo "operation=$op" >> "$GITHUB_OUTPUT"
-          elif [ "$GITHUB_EVENT_NAME" = "push" ] && [ "$GITHUB_REF" = "refs/heads/main" ]; then
-            echo "operation=apply" >> "$GITHUB_OUTPUT"
-          else
-            echo "operation=plan" >> "$GITHUB_OUTPUT"
-          fi
-
       - uses: actions/checkout@v4
 
       - name: Setup Terraform
@@ -54,11 +42,32 @@ jobs:
         run: terraform validate
 
       - name: Terraform Plan
-        if: steps.op.outputs.operation == 'plan'
         run: terraform plan -out=tfplan -var="gcp_project_id=${{ secrets.GCP_PROJECT_ID }}"
 
+  apply:
+    if: github.event_name == 'workflow_dispatch' && inputs.operation == 'apply'
+    runs-on: ubuntu-latest
+    environment: manual-apply
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.6
+
+      - name: Auth GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GOOGLE_CREDENTIALS }}
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Validate
+        run: terraform validate
+
       - name: Terraform Apply
-        if: steps.op.outputs.operation == 'apply'
         run: terraform apply -auto-approve -var="gcp_project_id=${{ secrets.GCP_PROJECT_ID }}"
 
   destroy:
