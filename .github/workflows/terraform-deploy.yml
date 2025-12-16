@@ -77,5 +77,6 @@ jobs:
           path: tfplan
 
       - name: Terraform Apply (optionnel)
+        environment: ${{ github.event.inputs.environment }}
         run: terraform apply tfplan
         working-directory: .
