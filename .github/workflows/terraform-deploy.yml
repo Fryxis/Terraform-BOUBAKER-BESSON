@@ -77,6 +77,5 @@ jobs:
           path: tfplan
 
       - name: Terraform Apply (optionnel)
-        if: ${{ env.APPLY == 'true' }}
         run: terraform apply -auto-approve tfplan
         working-directory: .
