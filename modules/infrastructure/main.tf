@@ -26,14 +26,26 @@ resource "google_compute_firewall" "ssh" {
   source_ranges = ["0.0.0.0/0"]
 }
 
-# IPs statiques (map index -> IP pour garantir l'ordre)
+# IPs publiques externes : GCP alloue automatiquement une IP fixe par VM
+# On utilise count au lieu de for_each pour correspondre aux VMs ci-dessous
+# Note: la propriété 'address' est omise → GCP attribue automatiquement une IP disponible
 resource "google_compute_address" "vm_ips" {
-  for_each = { for idx, ip in var.vm_ips : tostring(idx) => ip }
+  count = local.vm_count
 
-  name    = "ip-${local.vm_prefix}-${tonumber(each.key) + 1}"
-  region  = var.gcp_region
-  address = each.value
+  name   = "ip-${local.vm_prefix}-${count.index + 1}"
+  region = var.gcp_region
+  # Pas de 'address' spécifié → allocation automatique par GCP
 }
+
+# IPs statiques (map index -> IP pour garantir l'ordre)
+#resource "google_compute_address" "vm_ips" {
+#  for_each = { for idx, ip in var.vm_ips : tostring(idx) => ip }
+#
+#  name    = "ip-${local.vm_prefix}-${tonumber(each.key) + 1}"
+#  region  = var.gcp_region
+#  address = each.value
+#}
+
 
 # VMs (count = 2 VMs)
 resource "google_compute_instance" "vms" {
@@ -53,7 +65,8 @@ resource "google_compute_instance" "vms" {
   network_interface {
     subnetwork = google_compute_subnetwork.subnet.id
     access_config {
-      nat_ip = google_compute_address.vm_ips[tostring(count.index)].address
+      # Référence l'IP allouée automatiquement par GCP (même index que la VM)
+      nat_ip = google_compute_address.vm_ips[count.index].address
     }
   }
 
