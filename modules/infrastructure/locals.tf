@@ -1,6 +1,23 @@
 locals {
-  # Stockage nom en minuscules
-  storage_name = lower("STORAGE-${var.student_name}-${var.environment}")
+  # Slug étudiant: minuscule, remplacements simples, max 63 chars
+  student_slug = substr(
+    trim(
+      replace(
+        replace(
+          replace(
+            lower(var.student_name),
+          " ", "-"),
+        "_", "-"),
+      ".", "-"),
+    "-"),
+    0,
+  63)
+
+  # Nommages conformes GCP
+  vpc_name     = "vpc-${local.student_slug}-${var.environment}"
+  subnet_name  = "subnet-${local.student_slug}-${var.environment}"
+  vm_prefix    = "vm-${local.student_slug}-${var.environment}"
+  storage_name = "storage-${local.student_slug}-${var.environment}"
 
   # Nombre de VMs fixe
   vm_count = 2
