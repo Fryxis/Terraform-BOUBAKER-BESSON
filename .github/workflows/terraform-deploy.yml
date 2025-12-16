@@ -53,30 +53,30 @@ jobs:
           terraform init \
             -backend-config="bucket=$TF_BACKEND_BUCKET" \
             -backend-config="prefix=$PREFIX"
-        working-directory: Terraform-BOUBAKER-BESSON
+        working-directory: .
 
       - name: Terraform Fmt
         run: terraform fmt -check -recursive
-        working-directory: Terraform-BOUBAKER-BESSON
+        working-directory: .
 
       - name: Terraform Validate
         run: terraform validate
-        working-directory: Terraform-BOUBAKER-BESSON
+        working-directory: .
 
       - name: Terraform Plan
         run: |
           terraform plan \
             -var-file="envs/$ENV/terraform.tfvars" \
             -out=tfplan
-        working-directory: Terraform-BOUBAKER-BESSON
+        working-directory: .
 
       - name: Upload Plan (artefact)
         uses: actions/upload-artifact@v4
         with:
           name: tfplan-${{ env.ENV }}
-          path: Terraform-BOUBAKER-BESSON/tfplan
+          path: tfplan
 
       - name: Terraform Apply (optionnel)
         if: ${{ env.APPLY == 'true' }}
         run: terraform apply -auto-approve tfplan
-        working-directory: Terraform-BOUBAKER-BESSON
+        working-directory: .

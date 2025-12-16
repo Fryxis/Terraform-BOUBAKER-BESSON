@@ -44,11 +44,11 @@ jobs:
           terraform init \
             -backend-config="bucket=$TF_BACKEND_BUCKET" \
             -backend-config="prefix=$PREFIX"
-        working-directory: Terraform-BOUBAKER-BESSON
+        working-directory: .
 
       - name: Terraform Destroy
         run: |
           terraform destroy \
             -var-file="envs/$ENV/terraform.tfvars" \
             -auto-approve
-        working-directory: Terraform-BOUBAKER-BESSON
+        working-directory: .
