@@ -6,19 +6,19 @@ on:
       environment:
         description: "Choix de l'environnement"
         required: true
-        default: dev
+        #default: dev
         type: choice
         options:
           - dev
           - prod
-      apply:
-        description: "Appliquer après le plan ? (true/false)"
-        required: true
-        default: "false"
-        type: choice
-        options:
-          - "false"
-          - "true"
+      #apply:
+      #  description: "Appliquer après le plan ? (true/false)"
+      #  required: true
+      #  default: "false"
+      #  type: choice
+      #  options:
+      #    - "false"
+      #    - "true"
 
 jobs:
   plan-and-apply:
