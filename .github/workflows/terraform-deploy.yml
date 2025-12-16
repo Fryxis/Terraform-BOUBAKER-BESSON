@@ -1,0 +1,82 @@
+name: Terraform Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Choix de l'environnement"
+        required: true
+        default: dev
+        type: choice
+        options:
+          - dev
+          - prod
+      apply:
+        description: "Appliquer après le plan ? (true/false)"
+        required: true
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+jobs:
+  plan-and-apply:
+    name: Plan (et Apply si validé)
+    runs-on: ubuntu-latest
+
+    env:
+      TF_VERSION: 1.6.6
+      ENV: ${{ github.event.inputs.environment }}
+      APPLY: ${{ github.event.inputs.apply }}
+      TF_BACKEND_BUCKET: terraform-state-boubaker-besson
+      TF_BACKEND_PREFIX_DEV: dev/terraform/state
+      TF_BACKEND_PREFIX_PROD: prod/terraform/state
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Auth GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+      - name: Terraform Init (backend prefix par env)
+        run: |
+          PREFIX=$([ "$ENV" = "dev" ] && echo "$TF_BACKEND_PREFIX_DEV" || echo "$TF_BACKEND_PREFIX_PROD")
+          terraform init \
+            -backend-config="bucket=$TF_BACKEND_BUCKET" \
+            -backend-config="prefix=$PREFIX"
+        working-directory: Terraform-BOUBAKER-BESSON
+
+      - name: Terraform Fmt
+        run: terraform fmt -check -recursive
+        working-directory: Terraform-BOUBAKER-BESSON
+
+      - name: Terraform Validate
+        run: terraform validate
+        working-directory: Terraform-BOUBAKER-BESSON
+
+      - name: Terraform Plan
+        run: |
+          terraform plan \
+            -var-file="envs/$ENV/terraform.tfvars" \
+            -out=tfplan
+        working-directory: Terraform-BOUBAKER-BESSON
+
+      - name: Upload Plan (artefact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan-${{ env.ENV }}
+          path: Terraform-BOUBAKER-BESSON/tfplan
+
+      - name: Terraform Apply (optionnel)
+        if: ${{ env.APPLY == 'true' }}
+        run: terraform apply -auto-approve tfplan
+        working-directory: Terraform-BOUBAKER-BESSON
