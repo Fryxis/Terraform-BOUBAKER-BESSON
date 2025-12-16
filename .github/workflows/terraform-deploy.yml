@@ -21,14 +21,13 @@ on:
       #    - "true"
 
 jobs:
-  plan-and-apply:
-    name: Plan (et Apply si validé)
+  plan:
+    name: Terraform Plan
     runs-on: ubuntu-latest
 
     env:
       TF_VERSION: 1.6.6
       ENV: ${{ github.event.inputs.environment }}
-      APPLY: ${{ github.event.inputs.apply }}
       TF_BACKEND_BUCKET: terraform-state-boubaker-besson
       TF_BACKEND_PREFIX_DEV: dev/terraform/state
       TF_BACKEND_PREFIX_PROD: prod/terraform/state
@@ -76,7 +75,46 @@ jobs:
           name: tfplan-${{ env.ENV }}
           path: tfplan
 
-      - name: Terraform Apply (optionnel)
-        environment: ${{ github.event.inputs.environment }}
+  apply:
+    name: Terraform Apply
+    needs: plan
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+
+    env:
+      TF_VERSION: 1.6.6
+      ENV: ${{ github.event.inputs.environment }}
+      TF_BACKEND_BUCKET: terraform-state-boubaker-besson
+      TF_BACKEND_PREFIX_DEV: dev/terraform/state
+      TF_BACKEND_PREFIX_PROD: prod/terraform/state
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Auth GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GOOGLE_CREDENTIALS }}
+
+      - name: Terraform Init (backend prefix par env)
+        run: |
+          PREFIX=$([ "$ENV" = "dev" ] && echo "$TF_BACKEND_PREFIX_DEV" || echo "$TF_BACKEND_PREFIX_PROD")
+          terraform init \
+            -backend-config="bucket=$TF_BACKEND_BUCKET" \
+            -backend-config="prefix=$PREFIX"
+        working-directory: .
+
+      - name: Download Plan (artefact)
+        uses: actions/download-artifact@v4
+        with:
+          name: tfplan-${{ env.ENV }}
+
+      - name: Terraform Apply
         run: terraform apply tfplan
         working-directory: .
