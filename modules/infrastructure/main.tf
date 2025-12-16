@@ -29,7 +29,7 @@ resource "google_compute_firewall" "ssh" {
 # IPs statiques (Listes)
 resource "google_compute_address" "vm_ips" {
   for_each = tolist(var.vm_ips)
-  
+
   name   = "ip-${var.student_name}-${var.environment}-${index(var.vm_ips, each.value) + 1}"
   region = var.gcp_region
 }
@@ -37,7 +37,7 @@ resource "google_compute_address" "vm_ips" {
 # VMs (count = 2 VMs)
 resource "google_compute_instance" "vms" {
   count = local.vm_count
-  
+
   name         = "VM-${var.student_name}-${var.environment}-${count.index + 1}"
   machine_type = var.machine_type
   zone         = var.gcp_zone
