@@ -41,3 +41,8 @@ variable "vm_ips" {
   type        = list(string)
   description = "Liste des IPs externes pour les VMs"
 }
+
+variable "ssh_public_key" {
+  type        = string
+  description = "Clé publique SSH pour l'accès Ansible"
+}

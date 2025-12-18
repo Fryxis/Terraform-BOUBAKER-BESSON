@@ -26,6 +26,21 @@ resource "google_compute_firewall" "ssh" {
   source_ranges = ["0.0.0.0/0"]
 }
 
+# Règle firewall HTTP
+resource "google_compute_firewall" "http" {
+  name    = "allow-http-${var.environment}"
+  network = google_compute_network.vpc.name
+
+  allow {
+    protocol = "tcp"
+    ports    = ["80"]
+  }
+
+  # On cible uniquement les VMs qui ont le tag "http-server"
+  target_tags   = ["http-server"]
+  source_ranges = ["0.0.0.0/0"]
+}
+
 # IPs publiques externes : GCP alloue automatiquement une IP fixe par VM
 # On utilise count au lieu de for_each pour correspondre aux VMs ci-dessous
 # Note: la propriété 'address' est omise → GCP attribue automatiquement une IP disponible
@@ -54,6 +69,11 @@ resource "google_compute_instance" "vms" {
   name         = "${local.vm_prefix}-${count.index + 1}"
   machine_type = var.machine_type
   zone         = var.gcp_zone
+
+  # AJOUT : Injection de la clé SSH
+  metadata = {
+    ssh-keys = "ansible:${var.ssh_public_key}"
+  }
 
   boot_disk {
     initialize_params {

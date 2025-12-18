@@ -1,0 +1,6 @@
+---
+- name: Déploiement complet du serveur Web
+  hosts: all
+  become: yes
+  roles:
+    - webserver
