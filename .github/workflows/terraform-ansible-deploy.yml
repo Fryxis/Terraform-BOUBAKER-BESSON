@@ -49,6 +49,7 @@ jobs:
           terraform plan \
             -var-file="envs/$ENV/terraform.tfvars" \
             -var="ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" \
+            -lock=false \
             -out=tfplan
 
       - name: Upload Plan (artefact)
