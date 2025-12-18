@@ -97,13 +97,31 @@ jobs:
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
 
-      # RÉCUPÉRATION DES IPs DYNAMIQUES
       - name: Get Web Server IPs
         id: get_ip
         run: |
-          # On récupère les IPs directement depuis le state mis à jour par l'apply
+          # On utilise -no-color pour nettoyer la sortie
+          # On force terraform à relire le backend avant l'output
+          terraform init -reconfigure \
+            -backend-config="bucket=${{ env.TF_BACKEND_BUCKET }}" \
+            -backend-config="prefix=$([ "$ENV" = "dev" ] && echo "dev/terraform/state" || echo "prod/terraform/state")"
+          
           IPS=$(terraform output -no-color -json vm_ips | jq -r 'join(",")')
+          
+          if [ -z "$IPS" ] || [ "$IPS" == "null" ]; then
+            echo "Erreur : Impossible de récupérer les IPs"
+            exit 1
+          fi
+          
           echo "SERVER_IPS=$IPS" >> $GITHUB_OUTPUT
+
+      # RÉCUPÉRATION DES IPs DYNAMIQUES
+      #- name: Get Web Server IPs
+      #  id: get_ip
+      #  run: |
+      #    # On récupère les IPs directement depuis le state mis à jour par l'apply
+      #    IPS=$(terraform output -no-color -json vm_ips | jq -r 'join(",")')
+      #    echo "SERVER_IPS=$IPS" >> $GITHUB_OUTPUT
     
     outputs:
       server_ips: ${{ steps.get_ip.outputs.SERVER_IPS }}
