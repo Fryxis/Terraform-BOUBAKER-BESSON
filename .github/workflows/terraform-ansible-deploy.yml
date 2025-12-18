@@ -101,9 +101,7 @@ jobs:
       - name: Get Web Server IPs
         id: get_ip
         run: |
-          # Rafraîchir le state pour s'assurer que les outputs sont à jour
-          terraform refresh -var-file="envs/$ENV/terraform.tfvars"
-          # Transforme la liste JSON ["IP1", "IP2"] en chaîne IP1,IP2 pour Ansible
+          # On récupère les IPs directement depuis le state mis à jour par l'apply
           IPS=$(terraform output -json vm_ips | jq -r 'join(",")')
           echo "SERVER_IPS=$IPS" >> $GITHUB_OUTPUT
     
