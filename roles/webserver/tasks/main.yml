@@ -1,0 +1,39 @@
+---
+- name: Installer Nginx
+  ansible.builtin.package:
+    name: nginx
+    state: present
+
+- name: Appliquer la configuration Nginx (Jinja2)
+  ansible.builtin.template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/sites-available/default
+    mode: '0644'
+  notify: Reload Nginx
+
+- name: S'assurer que le dossier web existe
+  ansible.builtin.file:
+    path: "{{ document_root }}"
+    state: directory
+    mode: '0755'
+    owner: www-data
+    group: www-data
+
+- name: Déployer la page d'accueil ultra jolie
+  ansible.builtin.template:
+    src: index.html.j2
+    dest: "{{ document_root }}/{{ index_file }}"
+    mode: '0644'
+    owner: www-data
+    group: www-data
+
+- name: S'assurer que Nginx est démarré et activé
+  ansible.builtin.service:
+    name: nginx
+    state: started
+    enabled: yes
+
+- name: Valider que le service répond
+  ansible.builtin.uri:
+    url: "http://localhost"
+    status_code: 200

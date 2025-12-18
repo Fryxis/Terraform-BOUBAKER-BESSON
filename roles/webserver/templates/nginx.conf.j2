@@ -1,0 +1,11 @@
+server {
+    listen {{ http_port }};
+    server_name {{ server_name }};
+
+    charset utf-8;
+
+    location / {
+        root {{ document_root }};
+        index {{ index_file }};
+    }
+}
