@@ -1,6 +1,7 @@
 module "infrastructure" {
   source = "./modules/infrastructure"
 
+  ssh_public_key = var.ssh_public_key
   environment    = var.environment
   student_name   = var.student_name
   gcp_project_id = var.gcp_project_id
