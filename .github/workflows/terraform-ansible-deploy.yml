@@ -102,7 +102,7 @@ jobs:
         id: get_ip
         run: |
           # On récupère les IPs directement depuis le state mis à jour par l'apply
-          IPS=$(terraform output -json vm_ips | jq -r 'join(",")')
+          IPS=$(terraform output -no-color -json vm_ips | jq -r 'join(",")')
           echo "SERVER_IPS=$IPS" >> $GITHUB_OUTPUT
     
     outputs:
