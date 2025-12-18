@@ -70,6 +70,8 @@ resource "google_compute_instance" "vms" {
   machine_type = var.machine_type
   zone         = var.gcp_zone
 
+  tags = ["http-server"]
+
   # AJOUT : Injection de la clé SSH
   metadata = {
     ssh-keys = "ansible:${var.ssh_public_key}"
